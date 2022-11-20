@@ -5,10 +5,9 @@ from django.db import models
 class Item(models.Model):
     """Item model that represents a single item on the site."""
 
-    CURRENCY_ITEM = [
-        ("USD", "usd"),
-        ('RUB', 'rub'),
-    ]
+    class CurrencyChoices(models.TextChoices):
+        USD = "usd", "Доллары"
+        RUB = "rub", "Рубли"
 
     name = models.CharField(
         verbose_name="Наименование товара",
@@ -25,8 +24,8 @@ class Item(models.Model):
     )
     currency = models.CharField(
         verbose_name="Валюта товара",
-        choices=CURRENCY_ITEM,
-        default="USD",
+        choices=CurrencyChoices.choices,
+        default=CurrencyChoices.USD,
         max_length=10,
     )
 
@@ -46,10 +45,9 @@ class Item(models.Model):
 class Discount(models.Model):
     """Discount model for the Order."""
 
-    TYPE_DISCOUNT = [
-        ("PERCENTAGE", "percentage"),
-        ("FIXED", "fixed"),
-    ]
+    class TypeChoices(models.TextChoices):
+        PERCENTAGE = "percentage", "Процентная скидка"
+        FIXED = "fixed", "Фиксированная скидка"
 
     name = models.CharField(
         verbose_name="Название скиди",
@@ -63,8 +61,8 @@ class Discount(models.Model):
     type = models.CharField(
         verbose_name="Тип скидки",
         max_length=32,
-        choices=TYPE_DISCOUNT,
-        default="PERCENTAGE",
+        choices=TypeChoices.choices,
+        default=TypeChoices.PERCENTAGE,
     )
 
     class Meta:
@@ -88,7 +86,7 @@ class Tax(models.Model):
     )
     percentage = models.PositiveSmallIntegerField(
         verbose_name="Процентная ставка",
-        default=13,
+        default=20,
     )
 
     class Meta:
@@ -101,9 +99,20 @@ class Tax(models.Model):
 
 class Order(models.Model):
     """Order model that contains different items to buy."""
+
+    class CurrencyChoices(models.TextChoices):
+        USD = 'usd', 'Доллары'
+        RUB = 'rub', 'Рубли'
+
     items = models.ManyToManyField(
         Item,
         verbose_name="Список товаров",
+    )
+    currency = models.CharField(
+        verbose_name="Валюта заказа",
+        choices=CurrencyChoices.choices,
+        default=CurrencyChoices.USD,
+        max_length=10,
     )
     discount = models.ForeignKey(
         Discount,
@@ -125,6 +134,9 @@ class Order(models.Model):
         verbose_name_plural = "Orders"
         default_related_name = "orders"
 
+    def __str__(self):
+        return str(self.id)
+
     @property
     def total_price(self):
         """The function of determining the total price of the order."""
@@ -134,7 +146,7 @@ class Order(models.Model):
 
         if self.discount is not None:
             discount = self.discount.amount
-            if self.discount.type == 'percentage':
+            if self.discount.type == "percentage":
                 total_price = total_price * (100 - discount) / 100
             else:
                 total_price = total_price - self.discount.amount_in_cents

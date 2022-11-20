@@ -7,4 +7,6 @@ app_name = "stripecheckout"
 urlpatterns = [
     path("buy/<int:item_id>/", views.ItemBuyView.as_view()),
     path("item/<int:item_id>/", views.ItemView.as_view()),
+    path("buy-order/<int:order_id>/", views.OrderBuyView.as_view()),
+    path("order/<int:order_id>/", views.OrderView.as_view()),
 ]
