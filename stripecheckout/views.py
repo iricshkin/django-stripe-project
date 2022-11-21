@@ -55,7 +55,7 @@ class ItemBuyView(DetailView):
     @staticmethod
     def get_intent(item):
         return stripe.PaymentIntent.create(
-            amount=int(item.price),  # Invalid integer
+            amount=item.price,
             currency=item.currency,
             payment_method_types=["card"],
             metadata={"integration_check": "accept_a_payment"},

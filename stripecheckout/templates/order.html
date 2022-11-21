@@ -1,70 +1,73 @@
-{% load static %}
-{% load mathfilters %}
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Stripe checkout</title>
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <link rel="stylesheet" href="{% static 'stripecheckout/css/style.css' %}">
-      <script src="https://js.stripe.com/v3/"></script>
-      <script src="https://polyfill.io/v3/polyfill.min.js?version=3.52.1&features=fetch"></script>
-  </head>
-  <body>
-  <input type="hidden" id="myVar" name="variable" value="{{ order.id }}">
-  <div id="column">
-
-        <table class="horizontal">
-        {% for item in order.items.all %}
-            <tr>
-            <td>{{ item.name }}</td>
-            <td>{{ item.description }}</td>
-            <td>{{ item.price|floatformat:"0" }} {{ item.currency }}</td>
-            </tr>
-        {% endfor %}
-        {% if order.discount is not None %}
-            <tr>
-            <td>Скидка</td>
-            <td>{{ order.discount.name }}</td>
-            {% if order.discount.type == 'percentage' %}
-                <td>{{ order.discount.amount }}%</td>
-            {% else %}
-                <td>-{{ order.discount.amount|floatformat:"0" }}</td>
-            {% endif %}
-            </tr>
-        {% endif %}
-        {% if order.tax is not None %}
-            <tr>
-            <td>Налог</td>
-            <td>{{ order.tax.name }}</td>
-            <td>{{ order.tax.percentage }}%</td>
-            </tr>
-        {% endif %}
+{% extends "base.html" %}
+{% block head%}
+<script src="https://js.stripe.com/v3/"></script>
+{% endblock %}
+{% block content %} ,
+<h1>Оплатить заказ № {{ order.id}}</h1>
+<table class="horizontal">
+    {% for item in order.items.all %}
         <tr>
-            <td>Итого</td>
-            <td></td>
-            <td>{{ order.total_price_in_dollars }} {{ order.currency }}</td>
+        <td>{{ item.name }}</td>
+        <td>{{ item.description }}</td>
+        <td>{{ item.price|floatformat:"0" }} {{ item.currency }}</td>
         </tr>
-        </table>
-    <form id="payment-form">
-        <div id="card-element">
-    <!-- Elements will create input elements here -->
-        </div>
-
-  <!-- We'll put the error messages in this element -->
-        <div id="card-errors" role="alert"></div>
-
-        <button id="submit">
-        <div class="spinner hidden" id="spinner"></div>
-        <span id="button-text">Pay</span>
-      </button>
-
-        <p id="card-error" role="alert"></p>
-      <p class="result-message hidden">
-        Payment succeeded, see the result in your
-        <a href="" target="_blank">Stripe dashboard.</a> Refresh the page to pay again.
-      </p>
-    </form>
-  </div>
-  <script src="{% static 'stripecheckout/js/script.js' %}"></script>
-  </body>
-</html>
+    {% endfor %}
+    {% if order.discount is not None %}
+        <tr>
+        <td>Скидка</td>
+        <td>{{ order.discount.name }}</td>
+        {% if order.discount.type == 'percentage' %}
+            <td>{{ order.discount.amount }}%</td>
+        {% else %}
+            <td>-{{ order.discount.amount|floatformat:"0" }}</td>
+        {% endif %}
+        </tr>
+    {% endif %}
+    {% if order.tax is not None %}
+        <tr>
+        <td>Налог</td>
+        <td>{{ order.tax.name }}</td>
+        <td>{{ order.tax.percentage }}%</td>
+        </tr>
+    {% endif %}
+    <tr>
+        <td>Итого</td>
+        <td></td>
+        <td>{{ order.total_price_in_dollars }} {{ order.currency }}</td>
+    </tr>
+    </table>
+<br/>
+<br/>
+<div id="card-element" class="MyCardElement" style="width: 400px;">
+ </div>
+<br/>
+<br/>
+<button class="btn btn-primary" id="payment-button">Buy</button>
+{% endblock %}
+{% block footer %}
+<script>
+    var stripe = Stripe('STRIPE_PUBLISHABLE_KEY');
+    var elements = stripe.elements();
+    var cardElement = elements.create("card");
+    cardElement.mount("#card-element");
+    var buyButton = document.getElementById('payment-button');
+    buyButton.addEventListener('click', function () {
+        fetch('/buy-order/{{ pk }}', {method: "GET"})
+                    .then(response => response.json())
+                    .then(client_secret =>
+            stripe
+                .confirmCardPayment(client_secret.clientSecret, {
+                    payment_method: {
+                        card: cardElement,
+                    }
+                })
+                .then(function (result) {
+                    console.log(result)
+                    if (result.paymentIntent.status === "succeeded") {
+                        window.location.replace("{{URL}}/success");
+                    }
+                })
+            );
+    });
+</script>
+{% endblock %}

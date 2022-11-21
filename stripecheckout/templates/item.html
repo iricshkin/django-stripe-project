@@ -1,37 +1,52 @@
-{% load mathfilters %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ item.name }}</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-  <div class="item_card" style="max-width: 350px; margin: 0 auto; padding: 20px; text-align: center">
-    <p class="item_name">{{ item.name }}</p>
-    <p class="item_description">{{ item.description }}</p>
-    <p class="item_price">{{ item.price|floatformat:"0"  }} {{item.currency}}</p>
-  </div>
-
-  <div class="button" style="text-align: center; margin-top: 20px;">
-    <button id="buy-button" style="font-size: 18px; color: #000000; border: none; background-color: bisque; padding: 10px;">Buy</button>
-  </div>
-  
-
-  <script src="https://js.stripe.com/v3/"></script>
-  <script type="text/javascript">
+{% block head%}
+<script src="https://js.stripe.com/v3/"></script>
+{% endblock %}
+{% block content %} 
+<h1>Оплатить {{ item.name }}</h1>
+<table class="horizontal">
+    <tr>
+      <td>{{ item.name }}</td>
+      <td>{{ item.description }}</td>
+      <td>{{ item.price }} {{item.currency}}</td>
+    </tr>
+  </table>
+<br/>
+<br/>
+ <div id="card-element" class="MyCardElement" style="width: 400px;">
+ </div>
+<br/>
+<br/>
+<button id="payment-button" class="btn btn-primary">
+    Buy
+</button>
+{% endblock %}
+{% block footer %}
+<script>
     var stripe = Stripe('STRIPE_PUBLISHABLE_KEY');
-    var buyButton    = document.getElementById('buy-button');
-    buyButton.addEventListener('click', () => myFunc('/buy/{{item.pk}}'));
+    var elements = stripe.elements();
+    var cardElement = elements.create("card");
+    cardElement.mount("#card-element");
 
-    function myFunc(url) {
-      fetch(url, {method: 'GET'})
-      .then(response => {return response.json()})
-      .then(session => stripe.redirectToCheckout({ sessionId: session.session_id}))
-    };
-  </script>
-    
-</body>
-</html>
+    var buyButton = document.getElementById('payment-button');
+    buyButton.addEventListener('click', function () {
+        fetch('/buy/{{ item.id}}', {method: "GET"})
+                    .then(response => response.json())
+                    .then(client_secret =>
+            stripe
+                .confirmCardPayment(client_secret.clientSecret, {
+                    payment_method: {
+                        card: cardElement,
+                    }
+                })
+                .then(function (result) {
+                    console.log(result)
+                    if (result.paymentIntent.status === "succeeded") {
+                        window.location.replace("{{URL}}//success");
+                    }
+                })
+            );
+    });
+</script>
+{% endblock %}
