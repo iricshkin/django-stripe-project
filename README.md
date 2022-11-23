@@ -1,8 +1,6 @@
 # Тестовый проект Django Stripe API
 
-Тестовый проект Django Stripe API
-
-![workflow](https://github.com/ShamievDima/test-stripe-project/actions/workflows/test_workflow.yml/badge.svg)
+![Django-app workflow](https://github.com/iricshkin/django-stripe-project/actions/workflows/djangostripe_workflows.yml/badge.svg)
 
 [![Python](https://img.shields.io/badge/-Python-464646?style=flat-square&logo=Python)](https://www.python.org/)
 [![Django](https://img.shields.io/badge/-Django-464646?style=flat-square&logo=Django)](https://www.djangoproject.com/)
@@ -85,7 +83,7 @@ STRIPE_SECRET_KEY # Ваш Secret key с сайта stripe.com
 
 | *URL* | *Метод*|*Описание*|
 |-------|--------|----------|
-| `api/buy/{id}` | `GET` | создает Stripe PaymentIndent для Item и возвращает __user_secret__|
+| `api/buy/{id}` | `GET` | создает Stripe PaymentIndent для Item и возвращает **user_secret**|
 
 Success Response:
 
@@ -107,7 +105,7 @@ Success Response:
 
 | *URL* | *Метод*|*Описание*|
 |-------|--------|----------|
-| `api/buy-order/{id}` | `GET` | создает Stripe PaymentIndent для Order и возвращает __user_secret__|
+| `api/buy-order/{id}` | `GET` | создает Stripe PaymentIndent для Order и возвращает **user_secret**|
 
 Success Response:
 
